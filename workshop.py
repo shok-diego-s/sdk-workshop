@@ -5,6 +5,7 @@ from importlib.metadata import version
 # Other libraries
 from shimoku_api_python import Client
 import pandas as pd
+import datetime as dt
 
 def read_csv(name: str, **kwargs) -> pd.DataFrame:
     return pd.read_csv(f"data/{name}.csv", **kwargs)
@@ -154,6 +155,17 @@ def options_mod_ex(shimoku: Client):
             # Quitar leyenda y zoom
             'dataZoom': False,
             'legend': False,
+            'optionModifications': {
+                'xAxis': {
+                    'axisLabel': {
+                        'formatter': '{value}',
+                        # Inclinar las labels del ejeX
+                        'rotate': 45,
+                        # Distanciar labels del ejeX
+                        'margin': 30,
+                    },
+                }
+            },
         }
     )
     next_order+=1
@@ -185,6 +197,35 @@ def options_mod_ex(shimoku: Client):
         },
     )
     next_order+=1
+
+def custom_predictive_line(shimoku: Client):
+    """
+    Cómo pintar la parte de predicción en LINE chart agregado por semanas o meses?
+    """
+
+    menu_path = 'predictive-line'
+    data = [
+        {'date': dt.date(2021, 1, 1), 'gas': 4, 'oil': 5},
+        {'date': dt.date(2021, 1, 2), 'gas': 7, 'oil': 6},
+        {'date': dt.date(2021, 1, 3), 'gas': 4, 'oil': 7},
+        {'date': dt.date(2021, 1, 4), 'gas': 9, 'oil': 5},
+        {'date': dt.date(2021, 1, 5), 'gas': 3, 'oil': 9},
+        {'date': dt.date(2021, 1, 6), 'gas': 6, 'oil': 5},
+        {'date': dt.date(2021, 1, 7), 'gas': 8, 'oil': 6},
+    ]
+
+    shimoku.plt.predictive_line(
+        data=data,
+        x='date', y=['gas', 'oil'],
+        min_value_mark=dt.date(2021, 1, 5).isoformat(),
+        max_value_mark=dt.date(2021, 1, 7).isoformat(),
+        menu_path=menu_path,
+        order=0,
+        rows_size=2, cols_size=12,
+        padding='0,0,0,1',
+        title='Fossil price evolution - first days 2021.',
+        color_mark='rgba(59, 255, 157, 0.4)',
+    )
 
 def custom_chart_ex(shimoku: Client):
     """
@@ -248,6 +289,40 @@ def custom_chart_ex(shimoku: Client):
         order=0,
     )
 
+def ordernar_subpaths(shimoku: Client):
+    """
+    """
+    # Plot dummy stuff
+    next_order=0
+    shimoku.plt.html(
+        html=shimoku.html_components.create_h1_title(
+            title="",
+            subtitle="title 1"
+        ),
+        menu_path="subpath/path1",
+        order=next_order,
+    )
+    next_order+=1
+
+    shimoku.plt.html(
+        html=shimoku.html_components.create_h1_title(
+            title="",
+            subtitle="title 2"
+        ),
+        menu_path="subpath/path2",
+        order=next_order,
+    )
+    next_order+=1
+
+    dash_name="Path ordering"
+
+    shimoku.plt.set_sub_path_orders(
+        paths_order={
+            "subpath/path2": 1,
+            "subpath/path1": 2,
+        }
+    )
+
 def theme_example(shimoku: Client):
     """
     Change logo of the dashboard
@@ -262,6 +337,18 @@ def theme_example(shimoku: Client):
         },
     )
 
+def format_pandas_date():
+    """
+    """
+    df = pd.DataFrame({'date': {0: '26/1/2016', 1: '26/1/2016'}})
+    # Convert date strings to 
+    df['date'] = pd.to_datetime(df['date'])
+    print(df.loc[0]['date'])
+    # this is the line that you should use
+    # Convert pandas dates to string with the desired format
+    df['date'] = df['date'].dt.strftime('%Y-%m-%d')
+    print(df.loc[0]['date'])
+
 if __name__ == "__main__":
 
     # Create the client
@@ -275,11 +362,14 @@ if __name__ == "__main__":
 
     menu_path="Info section"
 
-    tabs_example(shimoku)
-    bentbox_example(shimoku)
-    options_mod_ex(shimoku)
-    custom_chart_ex(shimoku)
-    theme_example(shimoku)
+    # tabs_example(shimoku)
+    # bentbox_example(shimoku)
+    # options_mod_ex(shimoku)
+    # custom_chart_ex(shimoku)
+    # theme_example(shimoku)
+    # custom_predictive_line(shimoku)
+    # ordernar_subpaths(shimoku)
+    format_pandas_date()
 
     # Execute all plots in asynchronous mode
     shimoku.activate_async_execution()
